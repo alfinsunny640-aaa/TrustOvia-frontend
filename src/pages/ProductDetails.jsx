@@ -135,6 +135,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Navbar from "../components/Navbar";
 import CartDrawer from "../components/CartDrawer";
+const BASE_URL = import.meta.env.VITE_BASE_URL;
+
+const API = `${BASE_URL}/api/products`;
 
 function ProductDetails() {
     const { id } = useParams();
@@ -156,7 +159,7 @@ function ProductDetails() {
         setPageLoading(true);
 
         axios
-            .get(`http://localhost:5000/api/products/${id}`)
+            .get(`${API}/${id}`)
             .then((res) => {
                 setProduct(res.data);
                 setMainImage(res.data.images?.[0] || res.data.image);
@@ -179,7 +182,7 @@ function ProductDetails() {
         try {
             setLoading(true);
 
-            await axios.post("http://localhost:5000/api/cart/add", {
+            await axios.post(`${BASE_URL}/api/cart/add`, {
                 userId,
                 productId: product._id,
                 quantity,
