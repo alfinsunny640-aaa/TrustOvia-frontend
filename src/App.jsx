@@ -3,6 +3,8 @@ import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
 import Profile from "./pages/Profile";
+import Cart from "./pages/Cart";
+import ProductDetails from "./pages/ProductDetails";
 
 
 function App() {
@@ -14,6 +16,8 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/home" element={<Home />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/cart" element={<Cart />} />
+                <Route path="/product/:id" element={<ProductDetails />} />
 
                 {/* SAFETY */}
                 <Route path="*" element={<Navigate to="/" />} />

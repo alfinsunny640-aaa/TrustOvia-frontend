@@ -1,20 +1,37 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { loginUser } from "../services/authApi";
+import { Eye, EyeOff } from "lucide-react";
 
 function Login() {
     const navigate = useNavigate();
+
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleLogin = async (e) => {
         e.preventDefault();
 
         try {
             const res = await loginUser({ email, password });
-            localStorage.setItem("user", JSON.stringify(res));
+            console.log("LOGIN API RESPONSE:", res);
+            // ✅ IMPORTANT FIX:
+            // Store user in the SAME structure used across the app
+            localStorage.setItem(
+                "user",
+                JSON.stringify({
+                    user: {
+                        _id: res.user.id,   // 🔥 MAP id → _id
+                        ...res.user
+                    }
+                })
+            );
+
+
             navigate("/home");
         } catch (err) {
+            console.error("LOGIN ERROR:", err.response?.data || err.message);
             alert("Invalid email or password");
         }
     };
@@ -29,21 +46,36 @@ function Login() {
                     Login.
                 </h2>
 
+                {/* EMAIL */}
                 <input
                     type="email"
                     className="w-full mb-4 px-4 py-3 border rounded-md focus:ring-2 focus:ring-red-400 outline-none"
                     placeholder="Email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    required
                 />
 
-                <input
-                    type="password"
-                    className="w-full mb-6 px-4 py-3 border rounded-md focus:ring-2 focus:ring-red-400 outline-none"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                />
+                {/* PASSWORD WITH EYE ICON */}
+                <div className="relative mb-6">
+                    <input
+                        type={showPassword ? "text" : "password"}
+                        className="w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-red-400 outline-none pr-12"
+                        placeholder="Password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                    />
+
+                    <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500"
+                        aria-label="Toggle password visibility"
+                    >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                </div>
 
                 <button
                     type="submit"
