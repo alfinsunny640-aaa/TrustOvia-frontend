@@ -40,14 +40,24 @@ function OrderDetails() {
             {/* SHIPPING */}
             <div className="border rounded-lg p-4 mb-6">
                 <h2 className="font-semibold mb-2">Shipping Address</h2>
-                <p>{order.shippingAddress.fullName}</p>
-                <p>{order.shippingAddress.addressLine}</p>
-                <p>
+
+                <p className="text-sm">{order.shippingAddress.fullName}</p>
+                <p className="text-sm">{order.shippingAddress.addressLine}</p>
+
+                <p className="text-sm">
                     {order.shippingAddress.city},{" "}
                     {order.shippingAddress.state} –{" "}
                     {order.shippingAddress.pincode}
                 </p>
+
+                {/* 📞 PHONE NUMBER */}
+                {order.contact?.phone && (
+                    <p className="text-sm mt-2 flex items-center gap-2">
+                        📞 {order.contact.phone}
+                    </p>
+                )}
             </div>
+
 
             {/* ITEMS */}
             <div className="border rounded-lg p-4 mb-6">

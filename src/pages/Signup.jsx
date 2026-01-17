@@ -24,11 +24,6 @@ function Signup() {
             return;
         }
 
-        if (password.length < 6) {
-            alert("Password must be at least 6 characters");
-            return;
-        }
-
         if (!nameRegex.test(name)) {
             setError("Name must contain only letters and be at least 3 characters");
             return;
@@ -58,13 +53,13 @@ function Signup() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#fff6f0] to-white">
+        <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 bg-gradient-to-b from-[#fff6f0] to-white">
             <form
                 onSubmit={handleSignup}
-                className="bg-white w-full max-w-md p-8 rounded-xl shadow-lg"
+                className="w-full max-w-sm sm:max-w-md bg-white p-6 sm:p-8 rounded-2xl shadow-lg"
             >
-                <h2 className="text-3xl font-bold text-red-500 mb-6">
-                    Signup.
+                <h2 className="text-2xl sm:text-3xl font-bold text-red-500 mb-6 text-center sm:text-left">
+                    Create account
                 </h2>
 
                 {error && (
@@ -74,24 +69,24 @@ function Signup() {
                 )}
 
                 <input
-                    className="w-full mb-4 px-4 py-3 border rounded-md focus:ring-2 focus:ring-red-400 outline-none"
+                    className="w-full mb-4 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-400 outline-none text-sm sm:text-base"
                     placeholder="Name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                 />
 
                 <input
-                    className="w-full mb-4 px-4 py-3 border rounded-md focus:ring-2 focus:ring-red-400 outline-none"
+                    className="w-full mb-4 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-400 outline-none text-sm sm:text-base"
                     placeholder="Email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                 />
 
-                {/* PASSWORD WITH EYE ICON */}
+                {/* PASSWORD */}
                 <div className="relative mb-6">
                     <input
                         type={showPassword ? "text" : "password"}
-                        className="w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-red-400 outline-none pr-12"
+                        className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-400 outline-none pr-12 text-sm sm:text-base"
                         placeholder="Password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -108,7 +103,7 @@ function Signup() {
 
                 <button
                     type="submit"
-                    className="w-full bg-red-500 text-white py-3 rounded-full font-semibold hover:bg-red-600 transition"
+                    className="w-full bg-red-500 text-white py-3 rounded-full font-semibold hover:bg-red-600 transition active:scale-[0.98]"
                 >
                     Sign up
                 </button>
@@ -117,7 +112,7 @@ function Signup() {
                     Already have an account?
                     <span
                         onClick={() => navigate("/login")}
-                        className="text-blue-600 ml-1 cursor-pointer"
+                        className="text-blue-600 ml-1 cursor-pointer hover:underline"
                     >
                         Log in
                     </span>
