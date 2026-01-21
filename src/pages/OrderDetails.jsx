@@ -51,11 +51,9 @@ function OrderDetails() {
                 </p>
 
                 {/* 📞 PHONE NUMBER */}
-                {order.contact?.phone && (
-                    <p className="text-sm mt-2 flex items-center gap-2">
-                        📞 {order.contact.phone}
-                    </p>
-                )}
+                <p className="mt-1">
+                    📞 {order.shippingAddress.phone}
+                </p>
             </div>
 
 

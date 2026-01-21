@@ -8,7 +8,6 @@ function Checkout() {
     const navigate = useNavigate();
     const storedUser = JSON.parse(localStorage.getItem("user"));
     const userId = storedUser?.user?._id;
-    console.log("CHECKOUT USER ID:", userId);
 
     const [cart, setCart] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -50,8 +49,7 @@ function Checkout() {
                 setCart(res.data || { items: [], subtotal: 0 });
                 setLoading(false);
             })
-            .catch((err) => {
-                console.error("CART LOAD ERROR:", err);
+            .catch(() => {
                 setCart({ items: [], subtotal: 0 });
                 setLoading(false);
             });
@@ -63,31 +61,22 @@ function Checkout() {
     useEffect(() => {
         if (!userId) return;
 
-        const fetchDefaultAddress = async () => {
-            try {
-                const res = await axios.get(
-                    `${API}/address/default/${userId}`
-                );
-
-                const data = res.data;
-
-                if (data) {
+        axios
+            .get(`${API}/address/default/${userId}`)
+            .then((res) => {
+                if (res.data) {
                     setAddress({
-                        fullName: data.fullName || "",
-                        addressLine: data.addressLine || "",
-                        city: data.city || "",
-                        state: data.state || "",
-                        pincode: data.pincode || "",
-                        country: data.country || "India",
-                        phone: data.phone || "",
+                        fullName: res.data.fullName || "",
+                        addressLine: res.data.addressLine || "",
+                        city: res.data.city || "",
+                        state: res.data.state || "",
+                        pincode: res.data.pincode || "",
+                        country: res.data.country || "India",
+                        phone: res.data.phone || "",
                     });
                 }
-            } catch (error) {
-                console.error("❌ DEFAULT ADDRESS ERROR:", error);
-            }
-        };
-
-        fetchDefaultAddress();
+            })
+            .catch(() => { });
     }, [userId]);
 
     if (loading) {
@@ -99,27 +88,108 @@ function Checkout() {
     const total = subtotal + shippingFee + tax;
 
     /* =========================
-       ✅ PLACE ORDER
+       🔹 LOAD RAZORPAY SCRIPT
        ========================= */
-    const handlePlaceOrder = async () => {
+    const loadRazorpay = () => {
+        return new Promise((resolve) => {
+            if (window.Razorpay) return resolve(true);
+
+            const script = document.createElement("script");
+            script.src = "https://checkout.razorpay.com/v1/checkout.js";
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.body.appendChild(script);
+        });
+    };
+
+    /* =========================
+       🔹 ONLINE PAYMENT
+       ========================= */
+    const startOnlinePayment = async () => {
+        const loaded = await loadRazorpay();
+        if (!loaded) {
+            alert("Razorpay SDK failed to load");
+            return;
+        }
+
+        try {
+            // 1️⃣ Create Razorpay order
+            const orderRes = await axios.post(
+                `${API}/payments/create-order`,
+                { amount: total * 100 } // paise
+            );
+
+            const options = {
+                key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+                amount: orderRes.data.amount,
+                currency: "INR",
+                name: "My Store",
+                description: "Order Payment",
+                order_id: orderRes.data.id,
+
+                handler: async function (response) {
+                    try {
+                        const verifyRes = await axios.post(`${API}/payments/verify`, {
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature,
+                            userId,
+                            shippingAddress: address,
+                        });
+
+                        navigate(`/order-success/${verifyRes.data.orderId}`);
+                    } catch (err) {
+                        console.error("VERIFY ERROR:", err.response?.data || err.message);
+                        alert("Payment verification failed");
+                    }
+                },
+
+
+                prefill: {
+                    name: address.fullName,
+                    contact: address.phone,
+                },
+
+                theme: { color: "#000" },
+            };
+
+            const paymentObject = new window.Razorpay(options);
+            paymentObject.open();
+        } catch (err) {
+            alert("Online payment failed");
+        }
+    };
+
+    /* =========================
+       🔹 COD ORDER
+       ========================= */
+    const placeCODOrder = async () => {
+        try {
+            const res = await axios.post(`${API}/orders`, {
+                userId,
+                paymentMethod: "COD",
+                shippingAddress: address,
+            });
+
+            navigate(`/order-success/${res.data.orderId}`);
+        } catch {
+            alert("Order failed");
+        }
+    };
+
+    /* =========================
+       🔹 PLACE ORDER
+       ========================= */
+    const handlePlaceOrder = () => {
         if (!cart?.items || cart.items.length === 0) {
             alert("Cart is empty");
             return;
         }
 
-        try {
-            const res = await axios.post(`${API}/orders`, {
-                userId,
-                paymentMethod,
-                shippingAddress: address,
-                contact: {
-                    phone: address.phone,
-                },
-            });
-
-            navigate(`/order-success/${res.data.orderId}`);
-        } catch (err) {
-            alert(err.response?.data?.message || "Order failed");
+        if (paymentMethod === "COD") {
+            placeCODOrder();
+        } else {
+            startOnlinePayment();
         }
     };
 
@@ -129,69 +199,41 @@ function Checkout() {
             <div className="flex-1 bg-white p-4 rounded-lg">
                 <h2 className="font-semibold mb-3">Delivery</h2>
 
-                <input
-                    placeholder="Full Name"
-                    className="border p-2 w-full mb-2 rounded"
-                    value={address.fullName}
-                    onChange={(e) =>
-                        setAddress({ ...address, fullName: e.target.value })
-                    }
-                />
-
-                <input
-                    placeholder="Address"
-                    className="border p-2 w-full mb-2 rounded"
-                    value={address.addressLine}
-                    onChange={(e) =>
-                        setAddress({ ...address, addressLine: e.target.value })
-                    }
-                />
-
-                <input
-                    placeholder="City"
-                    className="border p-2 w-full mb-2 rounded"
-                    value={address.city}
-                    onChange={(e) =>
-                        setAddress({ ...address, city: e.target.value })
-                    }
-                />
-
-                <input
-                    placeholder="State"
-                    className="border p-2 w-full mb-2 rounded"
-                    value={address.state}
-                    onChange={(e) =>
-                        setAddress({ ...address, state: e.target.value })
-                    }
-                />
-
-                <input
-                    placeholder="Pincode"
-                    className="border p-2 w-full mb-2 rounded"
-                    value={address.pincode}
-                    onChange={(e) =>
-                        setAddress({ ...address, pincode: e.target.value })
-                    }
-                />
-
-                <input
-                    placeholder="Phone"
-                    className="border p-2 w-full mb-2 rounded"
-                    value={address.phone}
-                    onChange={(e) =>
-                        setAddress({ ...address, phone: e.target.value })
-                    }
-                />
+                {["fullName", "addressLine", "city", "state", "pincode", "phone"].map(
+                    (field) => (
+                        <input
+                            key={field}
+                            placeholder={field}
+                            className="border p-2 w-full mb-2 rounded"
+                            value={address[field]}
+                            onChange={(e) =>
+                                setAddress({
+                                    ...address,
+                                    [field]: e.target.value,
+                                })
+                            }
+                        />
+                    )
+                )}
 
                 <h2 className="font-semibold mt-5 mb-2">Payment</h2>
 
-                <label className="block border p-3 rounded mb-2">
+                <label className="flex gap-2 border p-3 rounded mb-2">
                     <input
                         type="radio"
                         checked={paymentMethod === "COD"}
                         onChange={() => setPaymentMethod("COD")}
-                    />{" "}
+                    />
                     Cash on Delivery
+                </label>
+
+                <label className="flex gap-2 border p-3 rounded">
+                    <input
+                        type="radio"
+                        checked={paymentMethod === "ONLINE"}
+                        onChange={() => setPaymentMethod("ONLINE")}
+                    />
+                    Online Payment
                 </label>
 
                 <button
@@ -204,30 +246,24 @@ function Checkout() {
 
             {/* RIGHT */}
             <div className="w-full md:w-96 bg-gray-50 p-4 rounded-lg">
-                <h2 className="font-semibold mb-4">Order summary</h2>
+                <h2 className="font-semibold mb-4">Order Summary</h2>
 
-                {cart?.items && cart.items.length > 0 ? (
-                    cart.items.map((item, i) => (
-                        <div key={i} className="flex gap-3 mb-3">
-                            <img
-                                src={item.image}
-                                alt={item.name}
-                                className="w-12 h-12 object-cover rounded border"
-                            />
-                            <div className="flex-1 text-sm">
-                                <p>{item.name}</p>
-                                <p className="text-gray-500">
-                                    ₹{item.price} × {item.quantity}
-                                </p>
-                            </div>
-                            <p className="text-sm font-medium">
-                                ₹{item.price * item.quantity}
+                {cart.items.map((item, i) => (
+                    <div key={i} className="flex gap-3 mb-3">
+                        <img
+                            src={item.image}
+                            className="w-12 h-12 border"
+                            alt=""
+                        />
+                        <div className="flex-1 text-sm">
+                            <p>{item.name}</p>
+                            <p className="text-gray-500">
+                                ₹{item.price} × {item.quantity}
                             </p>
                         </div>
-                    ))
-                ) : (
-                    <p className="text-sm text-gray-500">Your cart is empty</p>
-                )}
+                        <p>₹{item.price * item.quantity}</p>
+                    </div>
+                ))}
 
                 <hr />
 
