@@ -199,22 +199,34 @@ function Checkout() {
             <div className="flex-1 bg-white p-4 rounded-lg">
                 <h2 className="font-semibold mb-3">Delivery</h2>
 
-                {["fullName", "addressLine", "city", "state", "pincode", "phone"].map(
-                    (field) => (
-                        <input
-                            key={field}
-                            placeholder={field}
-                            className="border p-2 w-full mb-2 rounded"
-                            value={address[field]}
-                            onChange={(e) =>
-                                setAddress({
-                                    ...address,
-                                    [field]: e.target.value,
-                                })
-                            }
-                        />
-                    )
-                )}
+                {["fullName", "addressLine", "city", "state", "pincode"].map((field) => (
+                    <input
+                        key={field}
+                        placeholder={field}
+                        className="border p-2 w-full mb-2 rounded"
+                        value={address[field]}
+                        onChange={(e) =>
+                            setAddress({
+                                ...address,
+                                [field]: e.target.value,
+                            })
+                        }
+                    />
+                ))}
+
+                {/* ✅ PHONE INPUT – DO NOT PUT IN MAP */}
+                <input
+                    type="tel"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    placeholder="Phone"
+                    className="border p-2 w-full mb-2 rounded"
+                    value={address.phone}
+                    onChange={(e) =>
+                        setAddress({ ...address, phone: e.target.value })
+                    }
+                />
+
 
                 <h2 className="font-semibold mt-5 mb-2">Payment</h2>
 
