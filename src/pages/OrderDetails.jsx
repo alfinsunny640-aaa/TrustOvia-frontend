@@ -51,9 +51,11 @@ function OrderDetails() {
                 </p>
 
                 {/* 📞 PHONE NUMBER */}
-                <p className="mt-1">
-                    📞 {order.shippingAddress.phone}
-                </p>
+                {(order.shippingAddress?.phone || order.contact?.phone) && (
+                    <p className="mt-1 flex items-center gap-2 text-sm">
+                        📞 {order.shippingAddress?.phone || order.contact?.phone}
+                    </p>
+                )}
             </div>
 
 
