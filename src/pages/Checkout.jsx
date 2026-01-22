@@ -105,12 +105,20 @@ function Checkout() {
     /* =========================
        🔹 ONLINE PAYMENT
        ========================= */
+    if (!address.phone || address.phone.length < 10) {
+        alert("Please enter a valid 10-digit phone number");
+        return;
+    }
+
+
     const startOnlinePayment = async () => {
         const loaded = await loadRazorpay();
         if (!loaded) {
             alert("Razorpay SDK failed to load");
             return;
         }
+
+
 
         try {
             // 1️⃣ Create Razorpay order
@@ -146,9 +154,10 @@ function Checkout() {
 
 
                 prefill: {
-                    name: address.fullName,
-                    contact: address.phone,
+                    name: address.fullName || "Customer",
+                    contact: String(address.phone || ""),
                 },
+
 
                 theme: { color: "#000" },
             };
