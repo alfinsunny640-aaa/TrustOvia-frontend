@@ -105,15 +105,7 @@ function Checkout() {
     /* =========================
        🔹 ONLINE PAYMENT
        ========================= */
-    if (!address.phone || !/^[0-9]{10}$/.test(address.phone)) {
-        alert("Enter valid 10 digit phone number");
-        return;
-    }
-
-    console.log("PHONE BEFORE PAYMENT:", address.phone);
-    console.log("KEY:", import.meta.env.VITE_RAZORPAY_KEY_ID);
-    console.log("IS MOBILE:", /Android|iPhone/i.test(navigator.userAgent));
-
+ 
 
     const startOnlinePayment = async () => {
         const loaded = await loadRazorpay();

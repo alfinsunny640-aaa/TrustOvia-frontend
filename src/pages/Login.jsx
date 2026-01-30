@@ -14,23 +14,26 @@ function Login() {
         e.preventDefault();
 
         try {
-            const res = await loginUser({ email, password });
+            const res = await loginUser({
+                email,
+                password,
+                isAdminLogin: false, // 👈 normal user login
+            });
+            // ✅ SAVE JWT TOKEN
+            localStorage.setItem("token", res.token);
+            
+            // ✅ STORE USER PROPERLY
+            localStorage.setItem("user", JSON.stringify(res.user));
 
-            localStorage.setItem(
-                "user",
-                JSON.stringify({
-                    user: {
-                        _id: res.user.id,
-                        ...res.user,
-                    },
-                })
-            );
-            localStorage.setItem("userId", res.user.id);
-
-            navigate("/home");
+            // ✅ REDIRECT BASED ON ROLE
+            if (res.user.role === "admin") {
+                navigate("/admin");
+            } else {
+                navigate("/home");
+            }
         } catch (err) {
             console.error("LOGIN ERROR:", err.response?.data || err.message);
-            alert("Invalid email or password");
+            alert(err.response?.data?.message || "Invalid email or password");
         }
     };
 
@@ -69,7 +72,6 @@ function Login() {
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500"
-                        aria-label="Toggle password visibility"
                     >
                         {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
